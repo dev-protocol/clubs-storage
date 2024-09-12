@@ -1,20 +1,22 @@
-# template-repos-ts
+# How to use the API endpoint
 
-Template repository for using TypeScript
+See: [`src/pages/debug.vue`](https://github.com/dev-protocol/clubs-storage/blob/main/src/pages/debug.vue)
 
-# Stack
+```js
+const response = await fetch(`https://storage.clubs.place/api/image`, {
+	method: 'POST',
+	body: formData,
+})
+```
 
-- npm client is [yarn](https://github.com/yarnpkg/yarn)
-- Testing is [ava](https://github.com/avajs/ava)
-- Linting is [eslint](https://github.com/eslint/eslint)
-- Basic lint rule set is [eslint-plugin-functional](https://github.com/jonaskello/eslint-plugin-functional)
-- Formatter is [prettier](https://github.com/prettier/prettier)
-- Pre-install utility is [ramda](https://github.com/ramda/ramda)
+or, you can add your EOA address on the file name by adding message and signature:
 
-# Usage
-
-Create a repository using this template; just runs following command.
-
-```bash
-yarn
+```js
+const response = await fetch(
+	`https://storage.clubs.place/api/image?message=SIGNED_MESSAGE&signature=0x...`,
+	{
+		method: 'POST',
+		body: formData,
+	},
+)
 ```
