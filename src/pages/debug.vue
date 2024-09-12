@@ -17,7 +17,7 @@ const onSubmit = async (event: Event) => {
 	const formData = new FormData()
 	formData.append('file', file)
 
-	const response = await fetch(`/api/image`, {
+	const response = await fetch(`/api/blob`, {
 		method: 'POST',
 		body: formData,
 	})
