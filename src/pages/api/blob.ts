@@ -1,4 +1,3 @@
-import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import { put } from '@vercel/blob'
 import { Redis } from '@upstash/redis'
@@ -12,9 +11,6 @@ import {
 } from '@devprotocol/util-ts'
 
 import { json } from 'utils/json'
-
-// eslint-disable-next-line functional/no-expression-statements
-dotenv.config()
 
 export const POST: APIRoute = async ({ request, url }) => {
 	const form = await request.formData()
