@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import { nanoid } from 'nanoid'
 import { put } from '@vercel/blob'
-import { createClient } from 'redis'
+import { Redis } from '@upstash/redis'
 import type { APIRoute } from 'astro'
 import { hashMessage, recoverAddress, ZeroAddress } from 'ethers'
 import {
@@ -41,13 +41,12 @@ export const POST: APIRoute = async ({ request, url }) => {
 	)
 
 	const client = await whenNotError(
-		createClient({
-			url: process.env.REDIS_URL,
-			username: process.env.REDIS_USERNAME ?? '',
-			password: process.env.REDIS_PASSWORD ?? '',
+		new Redis({
+			url: process.env.KV_REST_API_URL,
+			token: process.env.KV_REST_API_TOKEN,
 		}),
 		async (_client) => {
-			return _client.connect().catch((err) => new Error(err))
+			return _client
 		},
 	)
 
