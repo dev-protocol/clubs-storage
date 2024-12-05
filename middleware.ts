@@ -37,6 +37,11 @@ export default function middleware(req: Request, context: RequestContext) {
 			return res
 		}),
 	)
+	if (!originalURL) {
+		return new Response(JSON.stringify({ error: 'Not found' }), {
+			status: 404,
+		})
+	}
 
 	return rewrite(new URL(originalURL))
 }
