@@ -1,14 +1,13 @@
 /* eslint-disable functional/no-conditional-statements */
-/* eslint-disable functional/no-expression-statements */
+import { whenNotErrorAll } from '@devprotocol/util-ts'
 import { Redis } from '@upstash/redis'
 import { rewrite, next } from '@vercel/edge'
-import type { RequestContext } from '@vercel/edge'
 
 export const config = {
 	matcher: ['/((?!_astro).*)'],
 }
 
-export default function middleware(req: Request, context: RequestContext) {
+export default async function middleware(req: Request) {
 	const url = new URL(req.url)
 
 	// Let the api and debug mode run.
@@ -19,7 +18,7 @@ export default function middleware(req: Request, context: RequestContext) {
 	// Fetch nano id of the asset from url.
 	const nanoId = url.pathname.split('/').at(-1)
 	if (!nanoId) {
-		return new Response(JSON.stringify({ error: 'Error 1: Not found' }), {
+		return new Response(JSON.stringify({ error: 'Not found' }), {
 			status: 404,
 		})
 	}
@@ -29,16 +28,18 @@ export default function middleware(req: Request, context: RequestContext) {
 		token: process.env.KV_REST_API_READ_ONLY_TOKEN,
 	})
 
-	context.waitUntil(
-		client.get(nanoId).then((res) => {
-			const originalURL = res ? (res as string) : ''
-			if (!originalURL) {
-				return new Response(JSON.stringify({ error: 'Error 2: Not found' }), {
-					status: 404,
-				})
-			}
-
-			return rewrite(new URL(originalURL))
-		}),
+	const originalURL = await whenNotErrorAll(
+		[nanoId, client],
+		async ([_nanoId, _client]) =>
+			_client
+				.get(_nanoId)
+				.then((res: unknown) => (res ? (res as string) : ''))
+				.catch((err: Error) => err as Error),
 	)
+
+	return originalURL instanceof Error || !originalURL
+		? new Response(JSON.stringify({ error: 'Error occured' }), {
+				status: 500,
+			})
+		: rewrite(new URL(originalURL))
 }
