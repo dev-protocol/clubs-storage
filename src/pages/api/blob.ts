@@ -33,6 +33,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 	const blob = await whenNotError(file, (_file) =>
 		put(pathname, _file, {
 			access: 'public',
+			multipart: true, // To upload large files successfully.
 		}),
 	)
 
