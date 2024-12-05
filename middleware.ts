@@ -18,7 +18,7 @@ export default function middleware(req: Request, context: RequestContext) {
 	}
 
 	// Fetch nano id of the asset from url.
-	const nanoId = url.pathname.split('/').at(0)
+	const nanoId = url.pathname.split('/').at(-1)
 	if (!nanoId) {
 		return new Response(JSON.stringify({ error: 'Not found' }), {
 			status: 404,
