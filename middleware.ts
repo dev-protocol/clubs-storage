@@ -11,7 +11,7 @@ export const config = {
 
 export default function middleware(req: Request, context: RequestContext) {
 	const url = new URL(req.url)
-
+	console.log({ url })
 	// Let the api and debug mode run.
 	if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/debug')) {
 		next()
