@@ -1,4 +1,3 @@
-/* eslint-disable functional/no-let */
 /* eslint-disable functional/no-conditional-statements */
 /* eslint-disable functional/no-expression-statements */
 import { Redis } from '@upstash/redis'
@@ -30,18 +29,16 @@ export default function middleware(req: Request, context: RequestContext) {
 		token: process.env.KV_REST_API_READ_ONLY_TOKEN,
 	})
 
-	let originalURL: string = ''
 	context.waitUntil(
 		client.get(nanoId).then((res) => {
-			originalURL = res ? (res as string) : ''
-			return res
+			const originalURL = res ? (res as string) : ''
+			if (!originalURL) {
+				return new Response(JSON.stringify({ error: 'Error 2: Not found' }), {
+					status: 404,
+				})
+			}
+
+			return rewrite(new URL(originalURL))
 		}),
 	)
-	if (!originalURL) {
-		return new Response(JSON.stringify({ error: 'Error 2: Not found' }), {
-			status: 404,
-		})
-	}
-
-	return rewrite(new URL(originalURL))
 }
