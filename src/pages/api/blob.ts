@@ -57,5 +57,5 @@ export const POST: APIRoute = async ({ request, url }) => {
 		},
 	)
 
-	return new Response(json({ savedNanoId }))
+	return new Response(json({ blob, savedNanoId }))
 }
