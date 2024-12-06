@@ -1,3 +1,5 @@
+/* eslint-disable functional/no-conditional-statements */
+
 import { nanoid } from 'nanoid'
 import { put } from '@vercel/blob'
 import { Redis } from '@upstash/redis'
@@ -19,9 +21,22 @@ export const POST: APIRoute = async ({ request, url }) => {
 		[url.searchParams.get('signature'), url.searchParams.get('message')],
 		([signature, message]) => ({ signature, message }),
 	)
-	const file =
-		whenDefined(form.get('file'), (file) => file) ??
+	const ogFile =
+		whenDefined(form.get('file'), (file) => file as File) ??
 		new Error('File is missing.')
+
+	const file = whenNotError(ogFile, async (_file) => {
+		const fileType = _file.type
+		if (!fileType.includes('video')) {
+			// eslint-disable-next-line functional/no-expression-statements
+			console.log('It is a video')
+			return _file
+		}
+
+		// TODO: add conversion logic.
+		return _file
+	})
+
 	const eoa =
 		whenDefined(props, ({ signature, message }) =>
 			recoverAddress(hashMessage(message), signature),
