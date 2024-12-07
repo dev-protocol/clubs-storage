@@ -69,10 +69,14 @@ export const POST: APIRoute = async ({ request, url }) => {
 		})
 
 		const outputBuffer = await fs.readFile(tempOutputPath)
+		const newFile = new File([outputBuffer], 'output.mp4', {
+			type: 'video/mp4',
+		})
+
 		// Clean up temporary files
 		await Promise.all([fs.unlink(tempInputPath), fs.unlink(tempOutputPath)])
 
-		return outputBuffer
+		return newFile
 	})
 
 	const eoa =
@@ -87,7 +91,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 		put(pathname, _file, {
 			access: 'public',
 			multipart: true, // To upload large files successfully.
-			contentType: 'video/mp4',
+			contentType: _file.type,
 		}),
 	)
 
