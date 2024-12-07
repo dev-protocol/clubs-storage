@@ -1,7 +1,17 @@
+/* eslint-disable functional/no-return-void */
+/* eslint-disable functional/no-promise-reject */
+/* eslint-disable functional/no-expression-statements */
+/* eslint-disable functional/no-conditional-statements */
+
+import os from 'os'
+import path from 'path'
+import fs from 'fs/promises'
 import { nanoid } from 'nanoid'
 import { put } from '@vercel/blob'
+import ffmpeg from 'fluent-ffmpeg'
 import { Redis } from '@upstash/redis'
 import type { APIRoute } from 'astro'
+import ffmpegPath from 'ffmpeg-static'
 import { hashMessage, recoverAddress, ZeroAddress } from 'ethers'
 import {
 	whenDefined,
@@ -12,6 +22,9 @@ import {
 
 import { json } from 'utils/json'
 
+// Tell fluent-ffmpeg where it can find FFmpeg
+ffmpeg.setFfmpegPath(ffmpegPath || '')
+
 export const POST: APIRoute = async ({ request, url }) => {
 	const form = await request.formData()
 
@@ -19,9 +32,53 @@ export const POST: APIRoute = async ({ request, url }) => {
 		[url.searchParams.get('signature'), url.searchParams.get('message')],
 		([signature, message]) => ({ signature, message }),
 	)
-	const file =
-		whenDefined(form.get('file'), (file) => file) ??
+	const ogFile =
+		whenDefined(form.get('file'), (file) => file as File) ??
 		new Error('File is missing.')
+
+	const file = await whenNotError(ogFile, async (_file) => {
+		const fileType = _file.type
+		if (!fileType.includes('video')) {
+			// If file type is not video, then don't convert it to mp4.
+			return _file
+		}
+
+		// Define temporary file paths.
+		const tempInputPath = path.join(
+			os.tmpdir(),
+			`input-${Date.now()}-${_file.name}`,
+		)
+		const tempOutputPath = path.join(os.tmpdir(), `output-${Date.now()}.mp4`)
+		// Save the uploaded file to a temporary location.
+		await fs.writeFile(tempInputPath, Buffer.from(await _file.arrayBuffer()))
+		// Convert the video to mp4.
+		await new Promise((resolve, reject) => {
+			ffmpeg(tempInputPath)
+				.output(tempOutputPath) // Pipe the converted output to PassThrough
+				.videoCodec('libx264') // Use H.264 codec
+				.format('mp4') // Convert to MP4 format
+				.on('end', (_) => {
+					console.log('Resolved', _)
+					resolve(_)
+				})
+				.on('error', (err) => {
+					console.error('FFmpeg error:', err.message)
+					reject(err)
+				})
+				.run()
+		})
+
+		const outputBuffer = await fs.readFile(tempOutputPath)
+		const newFile = new File([outputBuffer], 'output.mp4', {
+			type: 'video/mp4',
+		})
+
+		// Clean up temporary files
+		await Promise.all([fs.unlink(tempInputPath), fs.unlink(tempOutputPath)])
+
+		return newFile
+	})
+
 	const eoa =
 		whenDefined(props, ({ signature, message }) =>
 			recoverAddress(hashMessage(message), signature),
@@ -34,6 +91,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 		put(pathname, _file, {
 			access: 'public',
 			multipart: true, // To upload large files successfully.
+			contentType: _file.type,
 		}),
 	)
 
