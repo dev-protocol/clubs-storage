@@ -2,7 +2,6 @@
 /* eslint-disable functional/no-promise-reject */
 /* eslint-disable functional/no-expression-statements */
 /* eslint-disable functional/no-conditional-statements */
-
 import os from 'os'
 import path from 'path'
 import fs from 'fs/promises'
@@ -11,7 +10,8 @@ import { put } from '@vercel/blob'
 import ffmpeg from 'fluent-ffmpeg'
 import { Redis } from '@upstash/redis'
 import type { APIRoute } from 'astro'
-import ffmpegPath from 'ffmpeg-static'
+import ffpmegInstaller from '@ffmpeg-installer/ffmpeg'
+import ffmpegProbeInstaller from '@ffprobe-installer/ffprobe'
 import { hashMessage, recoverAddress, ZeroAddress } from 'ethers'
 import {
 	whenDefined,
@@ -21,9 +21,6 @@ import {
 } from '@devprotocol/util-ts'
 
 import { json } from 'utils/json'
-
-// Tell fluent-ffmpeg where it can find FFmpeg
-ffmpeg.setFfmpegPath(ffmpegPath || '')
 
 export const POST: APIRoute = async ({ request, url }) => {
 	const form = await request.formData()
@@ -43,20 +40,27 @@ export const POST: APIRoute = async ({ request, url }) => {
 			return _file
 		}
 
+		const date = Date.now()
 		// Define temporary file paths.
 		const tempInputPath = path.join(
 			os.tmpdir(),
 			`input-${Date.now()}-${_file.name}`,
 		)
-		const tempOutputPath = path.join(os.tmpdir(), `output-${Date.now()}.mp4`)
+		const tempOutputPath = path.join(os.tmpdir(), `output-${date}.mp4`)
 		// Save the uploaded file to a temporary location.
 		await fs.writeFile(tempInputPath, Buffer.from(await _file.arrayBuffer()))
+
 		// Convert the video to mp4.
 		await new Promise((resolve, reject) => {
-			ffmpeg(tempInputPath)
-				.output(tempOutputPath) // Pipe the converted output to PassThrough
-				.videoCodec('libx264') // Use H.264 codec
-				.format('mp4') // Convert to MP4 format
+			ffmpeg()
+				.setFfmpegPath(ffpmegInstaller.path!)
+				.setFfprobePath(ffmpegProbeInstaller.path!)
+				.input(tempInputPath)
+				.output(tempOutputPath)
+				.videoCodec('libx264')
+				.audioCodec('aac')
+				.outputOption('-movflags faststart')
+				.format('mp4')
 				.on('end', (_) => {
 					console.log('Resolved', _)
 					resolve(_)
@@ -69,7 +73,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 		})
 
 		const outputBuffer = await fs.readFile(tempOutputPath)
-		const newFile = new File([outputBuffer], 'output.mp4', {
+		const newFile = new File([outputBuffer], `output-${date}.mp4`, {
 			type: 'video/mp4',
 		})
 
@@ -115,5 +119,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 		},
 	)
 
-	return new Response(json({ blob, savedNanoId }))
+	return new Response(
+		json({ blob, url: `https://storage.clubs.place/${savedNanoId}` }),
+	)
 }
