@@ -1,7 +1,7 @@
 /* eslint-disable functional/no-conditional-statements */
-import { whenNotErrorAll } from '@devprotocol/util-ts'
 import { Redis } from '@upstash/redis'
 import { rewrite, next } from '@vercel/edge'
+import { whenNotErrorAll } from '@devprotocol/util-ts'
 
 export const config = {
 	matcher: ['/((?!_astro).*)'],
@@ -15,19 +15,27 @@ export default async function middleware(req: Request) {
 		return next()
 	}
 
-	const allowedDomains = ['https://clubs.place/', 'https://prerelease.clubs.place/']
-	const origin = req.headers.get('origin')
-	const referer = req.headers.get('referer')
-	if (!referer || !allowedDomains.includes(referer) || !origin || !allowedDomains.includes(origin)) {
-		return new Response('Forbidden', { status: 403 });
-	}
-
 	// Fetch nano id of the asset from url.
 	const nanoId = url.pathname.split('/').at(-1)
 	if (!nanoId) {
 		return new Response(JSON.stringify({ error: 'Not found' }), {
 			status: 404,
 		})
+	}
+
+	const allowedDomains = [
+		'https://clubs.place/',
+		'https://prerelease.clubs.place/',
+	]
+	const origin = req.headers.get('origin')
+	const referer = req.headers.get('referer')
+	if (
+		!referer ||
+		!allowedDomains.includes(referer) ||
+		!origin ||
+		!allowedDomains.includes(origin)
+	) {
+		return new Response('Forbidden', { status: 403 })
 	}
 
 	const client = new Redis({
@@ -43,7 +51,7 @@ export default async function middleware(req: Request) {
 				.then((res: unknown) => (res ? (res as string) : ''))
 				.catch((err: Error) => err as Error),
 	)
-	console.log('Original url', originalURL)
+
 	return originalURL instanceof Error || !originalURL
 		? new Response(JSON.stringify({ error: 'Error occured' }), {
 				status: 500,
