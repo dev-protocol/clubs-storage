@@ -11,7 +11,6 @@ import ffmpeg from 'fluent-ffmpeg'
 import { Redis } from '@upstash/redis'
 import type { APIRoute } from 'astro'
 import ffpmegInstaller from '@ffmpeg-installer/ffmpeg'
-import ffmpegProbeInstaller from '@ffprobe-installer/ffprobe'
 import { hashMessage, recoverAddress, ZeroAddress } from 'ethers'
 import {
 	whenDefined,
@@ -53,7 +52,6 @@ export const POST: APIRoute = async ({ request, url }) => {
 		await new Promise((resolve, reject) => {
 			ffmpeg()
 				.setFfmpegPath(ffpmegInstaller.path!)
-				.setFfprobePath(ffmpegProbeInstaller.path!)
 				.input(tempInputPath)
 				.output(tempOutputPath)
 				.videoCodec('libx264')
