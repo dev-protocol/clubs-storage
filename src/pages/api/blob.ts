@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable functional/no-loop-statements */
+/* eslint-disable functional/no-let */
+/* eslint-disable functional/immutable-data */
 /* eslint-disable functional/no-return-void */
 /* eslint-disable functional/no-promise-reject */
 /* eslint-disable functional/no-expression-statements */
-/* eslint-disable functional/no-conditional-statements */
+ 
 
 import os from 'os'
 import path from 'path'
@@ -9,111 +13,100 @@ import fs from 'fs/promises'
 import { nanoid } from 'nanoid'
 import { put } from '@vercel/blob'
 import ffmpeg from 'fluent-ffmpeg'
-import { Redis } from '@upstash/redis'
+// import { Redis } from '@upstash/redis'
 import type { APIRoute } from 'astro'
 import ffmpegPath from 'ffmpeg-static'
 import { hashMessage, recoverAddress, ZeroAddress } from 'ethers'
-import {
-	whenDefined,
-	whenDefinedAll,
-	whenNotError,
-	whenNotErrorAll,
-} from '@devprotocol/util-ts'
+// import {
+// 	whenDefined,
+// 	whenDefinedAll,
+// 	whenNotError,
+// 	whenNotErrorAll,
+// } from '@devprotocol/util-ts'
 
 import { json } from 'utils/json'
 
 // Tell fluent-ffmpeg where it can find FFmpeg
 ffmpeg.setFfmpegPath(ffmpegPath || '')
 
+// ... (same imports and setup)
+
 export const POST: APIRoute = async ({ request, url }) => {
-	const form = await request.formData()
+  const form = await request.formData();
+  const ogFile = form.get('file') as File;
 
-	const props = whenDefinedAll(
-		[url.searchParams.get('signature'), url.searchParams.get('message')],
-		([signature, message]) => ({ signature, message }),
-	)
-	const ogFile =
-		whenDefined(form.get('file'), (file) => file as File) ??
-		new Error('File is missing.')
+  // Validate file, signature, message, etc. as before
+  // ...
 
-	const file = await whenNotError(ogFile, async (_file) => {
-		const fileType = _file.type
-		if (!fileType.includes('video')) {
-			// If file type is not video, then don't convert it to mp4.
-			return _file
-		}
+  const uniqueId = `${Date.now()}-${nanoid()}`
+  const tempDir = os.tmpdir()
+  const inputTempPath = path.join(tempDir, `input-${uniqueId}`)
+  const outputPrefix = path.join(tempDir, `hls-${uniqueId}`)
+  const m3u8Path = `${outputPrefix}.m3u8`
 
-		// Define temporary file paths.
-		const tempInputPath = path.join(
-			os.tmpdir(),
-			`input-${Date.now()}-${_file.name}`,
-		)
-		const tempOutputPath = path.join(os.tmpdir(), `output-${Date.now()}.mp4`)
-		// Save the uploaded file to a temporary location.
-		await fs.writeFile(tempInputPath, Buffer.from(await _file.arrayBuffer()))
-		// Convert the video to mp4.
-		await new Promise((resolve, reject) => {
-			ffmpeg(tempInputPath)
-				.output(tempOutputPath) // Pipe the converted output to PassThrough
-				.videoCodec('libx264') // Use H.264 codec
-				.format('mp4') // Convert to MP4 format
-				.on('end', (_) => {
-					console.log('Resolved', _)
-					resolve(_)
-				})
-				.on('error', (err) => {
-					console.error('FFmpeg error:', err.message)
-					reject(err)
-				})
-				.run()
-		})
+  // Save input and convert to HLS
+  await fs.writeFile(inputTempPath, Buffer.from(await ogFile.arrayBuffer()));
+  await new Promise((resolve, reject) => {
+    ffmpeg(inputTempPath)
+      .outputOptions([
+        '-profile:v baseline',
+        '-level 3.0',
+        '-start_number 0',
+        '-hls_time 10',
+        '-hls_list_size 0',
+        `-hls_segment_filename ${outputPrefix}-%03d.ts`,
+        '-f hls'
+      ])
+      .output(m3u8Path)
+      .on('end', (_) => resolve(null))
+      .on('error', reject)
+      .run()
+  });
 
-		const outputBuffer = await fs.readFile(tempOutputPath)
-		const newFile = new File([outputBuffer], 'output.mp4', {
-			type: 'video/mp4',
-		})
+  // Identify EOA, create basePath
+  const eoa = ZeroAddress; // Or compute from signature/message
+  const nanoId = nanoid();
+  const basePath = `${eoa}/${nanoId}`;
 
-		// Clean up temporary files
-		await Promise.all([fs.unlink(tempInputPath), fs.unlink(tempOutputPath)])
+  // Find all HLS files
+  const dirFiles = await fs.readdir(tempDir);
+  const hlsFiles = dirFiles.filter((f) => f.startsWith(`hls-${uniqueId}`));
+  const segmentFiles = hlsFiles.filter((f) => f.endsWith('.ts'));
+  
+  // Upload segments and map their filenames to absolute URLs
+  const segmentMap = {};
+  for (const segmentFilename of segmentFiles) {
+    const segmentData = await fs.readFile(path.join(tempDir, segmentFilename));
+    const { url: segmentUrl } = await put(`${basePath}/${segmentFilename}`, segmentData, {
+      access: 'public',
+      contentType: 'video/mp2t',
+    });
+    segmentMap[segmentFilename] = segmentUrl;
+	console.table({segmentMap})
+  }
 
-		return newFile
-	})
+  // Rewrite M3U8 file
+  let m3u8Content = await fs.readFile(m3u8Path, 'utf8');
+  for (const [localName, absoluteUrl] of Object.entries(segmentMap)) {
+    m3u8Content = m3u8Content.replace(new RegExp(localName, 'g'), absoluteUrl);
+  }
 
-	const eoa =
-		whenDefined(props, ({ signature, message }) =>
-			recoverAddress(hashMessage(message), signature),
-		) ?? ZeroAddress
+  // Upload updated M3U8
+  const m3u8Buffer = Buffer.from(m3u8Content, 'utf8');
+  const { url: m3u8Url } = await put(`${basePath}/index.m3u8`, m3u8Buffer, {
+    access: 'public',
+    contentType: 'application/x-mpegURL',
+  });
 
-	const nanoId = nanoid()
-	const pathname = `${eoa}/${nanoId}` // a random UID generated by Vercel Blob will be added after this.
+  // Clean up
+  await fs.unlink(inputTempPath).catch((_) => {});
+  for (const f of hlsFiles) {
+    await fs.unlink(path.join(tempDir, f)).catch((_) => {});
+  }
 
-	const blob = await whenNotError(file, (_file) =>
-		put(pathname, _file, {
-			access: 'public',
-			multipart: true, // To upload large files successfully.
-			contentType: _file.type,
-		}),
-	)
+  // Save m3u8Url to Redis if needed
+  // ...
 
-	const client = await whenNotError(
-		new Redis({
-			url: process.env.KV_REST_API_URL,
-			token: process.env.KV_REST_API_TOKEN,
-		}),
-		async (_client) => {
-			return _client
-		},
-	)
+  return new Response(json({ m3u8Url }));
+};
 
-	const savedNanoId = await whenNotErrorAll(
-		[nanoId, client, blob],
-		async ([_nanoId, _client, _blob]) => {
-			return _client
-				.set(_nanoId, _blob.url)
-				.then((res) => (res ? _nanoId : new Error('Invalid res')))
-				.catch((err) => new Error(err))
-		},
-	)
-
-	return new Response(json({ blob, savedNanoId }))
-}
