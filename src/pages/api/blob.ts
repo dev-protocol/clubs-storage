@@ -12,16 +12,16 @@ import fs from 'fs/promises'
 import { nanoid } from 'nanoid'
 import { put } from '@vercel/blob'
 import ffmpeg from 'fluent-ffmpeg'
-// import { Redis } from '@upstash/redis'
+import { Redis } from '@upstash/redis'
 import type { APIRoute } from 'astro'
 import ffmpegPath from 'ffmpeg-static'
 import { hashMessage, recoverAddress, ZeroAddress } from 'ethers'
-// import {
-// 	whenDefined,
-// 	whenDefinedAll,
-// 	whenNotError,
-// 	whenNotErrorAll,
-// } from '@devprotocol/util-ts'
+import {
+	whenDefined,
+	whenDefinedAll,
+	whenNotError,
+	whenNotErrorAll,
+} from '@devprotocol/util-ts'
 
 import { json } from 'utils/json'
 
@@ -107,8 +107,30 @@ export const POST: APIRoute = async ({ request, url }) => {
 		await fs.unlink(path.join(tempDir, f)).catch((_) => {})
 	}
 
+	const fileId = nanoid()
 	// Save m3u8Url to Redis if needed
 	// ...
 
-	return new Response(json({ m3u8Url }))
+	const client = await whenNotError(
+		new Redis({
+			url: process.env.KV_REST_API_URL,
+			token: process.env.KV_REST_API_TOKEN,
+		}),
+		async (_client) => {
+			return _client
+		},
+	)
+
+	const savedFileId = await whenNotErrorAll(
+		[fileId, client, m3u8Url],
+		async ([_fileId, _client, _m3u8Url]) => {
+			return _client
+				.set(_fileId, _m3u8Url)
+				.then((res) => (res ? _fileId : new Error('Invalid res')))
+				.catch((err) => new Error(err))
+		},
+	)
+	return new Response(
+		json({ m3u8Url, storageURL: `https://storage.clubs.place/${savedFileId}` }),
+	)
 }
