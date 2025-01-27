@@ -73,7 +73,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 	const segmentFiles = hlsFiles.filter((f) => f.endsWith('.ts'))
 
 	// Upload segments and map their filenames to absolute URLs
-	const segmentMap = {}
+	const segmentMap: Record<string, string> = {}
 	for (const segmentFilename of segmentFiles) {
 		const segmentData = await fs.readFile(path.join(tempDir, segmentFilename))
 		const { url: segmentUrl } = await put(

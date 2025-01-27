@@ -29,7 +29,7 @@ const onSubmit = async (event: Event) => {
 </script>
 
 <template>
-	<h1>Upload Image</h1>
+	<h1>Upload MP4 for m3u8</h1>
 
 	<form @submit="onSubmit">
 		<input name="file" ref="inputFileRef" type="file" required />
