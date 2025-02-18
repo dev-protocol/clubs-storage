@@ -19,7 +19,7 @@ import {
 	whenNotErrorAll,
 } from '@devprotocol/util-ts'
 
-import { json } from 'utils/json'
+import { cors, json } from 'utils/json'
 
 export const POST: APIRoute = async ({ request, url }) => {
 	const form = await request.formData()
@@ -116,6 +116,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 	)
 
 	return new Response(
-		json({ blob, storageURL: `https://storage.clubs.place/${savedFileId}` }),
+		json({ ...blob, storageURL: `https://storage.clubs.place/${savedFileId}` }),
+		{ headers: { ...cors } },
 	)
 }
