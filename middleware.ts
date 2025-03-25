@@ -1,7 +1,7 @@
 /* eslint-disable functional/no-conditional-statements */
-import { whenNotErrorAll } from '@devprotocol/util-ts'
 import { Redis } from '@upstash/redis'
 import { rewrite, next } from '@vercel/edge'
+import { whenNotErrorAll } from '@devprotocol/util-ts'
 
 export const config = {
 	matcher: ['/((?!_astro).*)'],
@@ -21,6 +21,21 @@ export default async function middleware(req: Request) {
 		return new Response(JSON.stringify({ error: 'Not found' }), {
 			status: 404,
 		})
+	}
+
+	const allowedDomains = [
+		'https://clubs.place/',
+		'https://prerelease.clubs.place/',
+	]
+	const origin = req.headers.get('origin')
+	const referer = req.headers.get('referer')
+	if (
+		!referer ||
+		!allowedDomains.includes(referer) ||
+		!origin ||
+		!allowedDomains.includes(origin)
+	) {
+		return new Response('Forbidden', { status: 403 })
 	}
 
 	const client = new Redis({
