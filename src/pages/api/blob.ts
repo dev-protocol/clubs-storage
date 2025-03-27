@@ -27,6 +27,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 		whenDefined(form.get('file'), (file) => file as File) ??
 		new Error('File is missing.')
 
+
 	const eoa =
 		whenDefined(props, ({ signature, message }) =>
 			recoverAddress(hashMessage(message), signature),
