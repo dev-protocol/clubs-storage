@@ -26,15 +26,48 @@ const onSubmit = async (event: Event) => {
 	console.table(newBlob)
 	blob.value = newBlob
 }
+
+const onSubmitHls = async (event: Event) => {
+	event.preventDefault()
+
+	if (!input.value?.files) {
+		throw new Error('No file selected')
+	}
+
+	const file = input.value.files[0]
+
+	const formData = new FormData()
+	formData.append('file', file)
+
+	const response = await fetch(`/api/blob?convert=hls`, {
+		method: 'POST',
+		body: formData,
+	})
+
+	const newBlob = (await response.json()) as PutBlobResult
+	console.table(newBlob)
+	blob.value = newBlob
+}
 </script>
 
 <template>
-	<h1>Upload MP4 for m3u8</h1>
+	<h1>Upload Image</h1>
 
 	<form @submit="onSubmit">
 		<input name="file" ref="inputFileRef" type="file" required />
 		<button type="submit">Upload</button>
 	</form>
+
+	<hr />
+
+	<h1>Upload Video as HLS</h1>
+
+	<form @submit="onSubmitHls" data-hls="true">
+		<input name="file" ref="inputFileRef" type="file" required />
+		<button type="submit">Upload</button>
+	</form>
+
+	<hr />
 
 	{{ blob }}
 </template>
