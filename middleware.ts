@@ -1,4 +1,3 @@
-/* eslint-disable functional/no-conditional-statements */
 import { whenNotErrorAll } from '@devprotocol/util-ts'
 import { Redis } from '@upstash/redis'
 import { rewrite, next } from '@vercel/edge'
