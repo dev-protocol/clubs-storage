@@ -3,7 +3,7 @@
 /* eslint-disable functional/no-let */
 /* eslint-disable functional/immutable-data */
 /* eslint-disable functional/no-return-void */
-/* eslint-disable functional/no-promise-reject */
+
 /* eslint-disable functional/no-expression-statements */
 
 import os from 'os'

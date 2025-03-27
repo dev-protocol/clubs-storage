@@ -18,13 +18,18 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: install deps
-        run: npm ci
+        run: |
+          corepack enable
+          yarn
 
       - name: lint
-        run: npm run lint
+        run: yarn lint
 
-      - name: astro check
-        run: npm run typecheck
+      - name: build
+        run: yarn build
 
       - name: test
-        run: npm test
+        run: yarn test
+
+      - name: astro check
+        run: yarn typecheck
