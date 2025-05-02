@@ -2131,15 +2131,15 @@ __metadata:
   linkType: hard
 
 "@vercel/blob@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@vercel/blob@npm:1.0.0"
+  version: 1.0.1
+  resolution: "@vercel/blob@npm:1.0.1"
   dependencies:
     async-retry: "npm:^1.3.3"
     is-buffer: "npm:^2.0.5"
     is-node-process: "npm:^1.2.0"
     throttleit: "npm:^2.1.0"
     undici: "npm:^5.28.4"
-  checksum: 10c0/5c5e990ddf0732a28233c38c05b7650dfed45f709ca83167ff8ba9ce3233737cbf6b2cfc621e059f65952f2f94978d2442fda53033ad28249c232a834b164bb7
+  checksum: 10c0/02e9a4571ff3b1f1be7ed5a656ef85e929e122de28c083dd3b1aeac57cc0181748721c0fd4905d0f4d10faa41a86beedf461c7efbd4d6420ce33a211cfc9bb27
   languageName: node
   linkType: hard
 
