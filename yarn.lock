@@ -2469,9 +2469,9 @@ __metadata:
   linkType: hard
 
 "@vercel/edge@npm:^1.1.2, @vercel/edge@npm:^1.2.1":
-  version: 1.2.1
-  resolution: "@vercel/edge@npm:1.2.1"
-  checksum: 10c0/ace3cc730a8d8fd37b2849d2b5240adbf1d888f4af9332082adc5cc63e3df109aca2dbc0db30a1fe79b1812946d27a03c4008edaee9d860226c1f1048444d966
+  version: 1.2.2
+  resolution: "@vercel/edge@npm:1.2.2"
+  checksum: 10c0/524115e7baef7867fc14669e5f57e4f4180eecabe32328c4d418754bfe82a21b9519fbc65dcafaf1b6d526651506e9d4955a2dfc319337a35868635e8cec5ec3
   languageName: node
   linkType: hard
 
