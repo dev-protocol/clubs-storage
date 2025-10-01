@@ -62,14 +62,14 @@ async function setClipboard(text: string) {
 	<hr />
 	{{ hls }}
 
-	<ul>
-		<li v-for="blob in blobs" :key="blob.url">
-			<img :src="blob.storageURL" alt="" />
-			<span>{{ blob.contentType }}</span>
+	<ul class="blobs">
+		<li v-for="blob in blobs" :key="blob.url" class="blob">
+			<img :src="blob.storageURL" alt="" class="blob-image" />
+			<span class="span">{{ blob.contentType }}</span>
 			<span>{{ blob.url }}</span>
 			<span
 				>{{ blob.storageURL }}
-				<button @click="() => setClipboard(blob.storageURL)" class="border">
+				<button @click="() => setClipboard(blob.storageURL)" class="button">
 					Copy
 				</button></span
 			>
@@ -78,29 +78,30 @@ async function setClipboard(text: string) {
 </template>
 
 <style scoped>
-ul {
+.blobs {
 	list-style: none;
 	padding: 0;
 	display: grid;
 	gap: 1rem;
 }
-li {
+.blob {
 	display: flex;
 	align-items: center;
 	gap: 1rem;
-	& img {
-		width: 4rem;
-		height: 4rem;
-		object-fit: contain;
-		border: 1px solid #ccc;
-		border-radius: 0.25rem;
-	}
-	& span {
-		font-family: monospace;
-		font-size: small;
-	}
 }
-button {
+.blob-image {
+	width: 4rem;
+	height: 4rem;
+	object-fit: contain;
+	border: 1px solid #ccc;
+	border-radius: 0.25rem;
+}
+.span {
+	font-family: monospace;
+	font-size: small;
+}
+
+.button {
 	border: 1px solid #ccc;
 	border-radius: 3px;
 	padding: 0.25rem 0.5rem;
