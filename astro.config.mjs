@@ -1,6 +1,7 @@
 import { config } from 'dotenv'
 import { defineConfig } from 'astro/config'
 import vercel from '@astrojs/vercel/serverless'
+import tailwindcss from '@tailwindcss/vite'
 
 import vue from '@astrojs/vue'
 
@@ -13,4 +14,7 @@ export default defineConfig({
 	},
 	adapter: vercel(),
 	integrations: [vue()],
+	vite: {
+		plugins: [tailwindcss()],
+	},
 })

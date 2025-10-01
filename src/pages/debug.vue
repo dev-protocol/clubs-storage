@@ -53,23 +53,57 @@ async function setClipboard(text: string) {
 	<h1>Upload Images</h1>
 
 	<form @submit="onSubmit">
-		<input name="file" ref="inputFileRef" type="file" multiple required />
-		<input type="checkbox" id="hls" name="hls" v-model="hls" />
-		<label for="hls">Convert video to HLS</label>
-		<button type="submit">Upload</button>
+		<div class="mb-4 flex items-center gap-4">
+			<input
+				name="file"
+				ref="inputFileRef"
+				type="file"
+				multiple
+				required
+				class="rounded border px-2 py-1 transition hover:bg-gray-200 active:bg-gray-300"
+			/>
+			<input type="checkbox" id="hls" name="hls" v-model="hls" />
+			<label for="hls">Convert video to HLS</label>
+		</div>
+		<button
+			type="submit"
+			class="rounded border px-2 py-1 transition hover:bg-gray-200 active:bg-gray-300"
+		>
+			Upload
+		</button>
 	</form>
 
-	<hr />
+	<hr class="my-4" />
 	{{ hls }}
 
-	<ul class="blobs">
-		<li v-for="blob in blobs" :key="blob.url" class="blob">
-			<img :src="blob.storageURL" alt="" class="blob-image" />
-			<span class="span">{{ blob.contentType }}</span>
-			<span>{{ blob.url }}</span>
-			<span
-				>{{ blob.storageURL }}
-				<button @click="() => setClipboard(blob.storageURL)" class="button">
+	<ul class="grid gap-4">
+		<li class="grid grid-cols-4 items-center gap-4">
+			<span class="font-bold">Preview</span>
+			<span class="font-bold">Content Type</span>
+			<span class="font-bold">URL</span>
+		</li>
+		<li
+			v-for="blob in blobs"
+			:key="blob.url"
+			class="grid grid-cols-4 items-center gap-4"
+		>
+			<img
+				:src="blob.storageURL"
+				alt=""
+				class="size-10 rounded object-contain"
+			/>
+			<span class="mono text-sm">{{ blob.contentType }}</span>
+			<span class="mono flex flex-col items-start gap-1 text-sm"
+				><a
+					:href="blob.storageURL"
+					target="_blank"
+					class="text-blue-500 underline"
+					>{{ blob.storageURL }}</a
+				>
+				<button
+					@click="() => setClipboard(blob.storageURL)"
+					class="rounded border px-2 py-1 transition hover:bg-gray-200 active:bg-gray-300"
+				>
 					Copy
 				</button></span
 			>
@@ -77,33 +111,6 @@ async function setClipboard(text: string) {
 	</ul>
 </template>
 
-<style scoped>
-.blobs {
-	list-style: none;
-	padding: 0;
-	display: grid;
-	gap: 1rem;
-}
-.blob {
-	display: flex;
-	align-items: center;
-	gap: 1rem;
-}
-.blob-image {
-	width: 4rem;
-	height: 4rem;
-	object-fit: contain;
-	border: 1px solid #ccc;
-	border-radius: 0.25rem;
-}
-.span {
-	font-family: monospace;
-	font-size: small;
-}
-
-.button {
-	border: 1px solid #ccc;
-	border-radius: 3px;
-	padding: 0.25rem 0.5rem;
-}
+<style>
+@import '../global.css';
 </style>
