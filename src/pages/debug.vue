@@ -90,7 +90,7 @@ async function setClipboard(text: string) {
 			<img
 				:src="blob.storageURL"
 				alt=""
-				class="size-10 rounded object-contain"
+				class="size-30 rounded object-contain"
 			/>
 			<span class="mono text-sm">{{ blob.contentType }}</span>
 			<span class="mono flex flex-col items-start gap-1 text-sm"
