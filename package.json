@@ -47,7 +47,7 @@
 		"@types/fluent-ffmpeg": "^2.1.27",
 		"@types/node": "22.18.12",
 		"@types/ramda": "0.31.1",
-		"@typescript-eslint/parser": "8.46.1",
+		"@typescript-eslint/parser": "8.46.2",
 		"@vercel/node": "^5.0.0",
 		"ava": "6.4.1",
 		"dotenv": "17.2.3",
