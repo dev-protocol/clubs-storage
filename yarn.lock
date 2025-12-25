@@ -2908,11 +2908,11 @@ __metadata:
   linkType: hard
 
 "@upstash/redis@npm:^1.34.3":
-  version: 1.35.8
-  resolution: "@upstash/redis@npm:1.35.8"
+  version: 1.36.0
+  resolution: "@upstash/redis@npm:1.36.0"
   dependencies:
     uncrypto: "npm:^0.1.3"
-  checksum: 10c0/50b695f33990d3e26ddf4d56d002b13b369bbaeaa3664563b14b1f5e51fe788b9bb839886fee508e1a6821b855efad18992446c6920f9b730c5c275e6894ac18
+  checksum: 10c0/b33badef3014357c9486e318282114932ee9eb0f3730024115c2cd0282d8428eca66c3b30f2895f91b2eb5e4a89001cf6312bfff4dc2be34ee1d7c6f438392bb
   languageName: node
   linkType: hard
 
