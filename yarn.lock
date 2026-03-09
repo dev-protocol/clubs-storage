@@ -3265,11 +3265,11 @@ __metadata:
   linkType: hard
 
 "@upstash/redis@npm:^1.34.3":
-  version: 1.36.3
-  resolution: "@upstash/redis@npm:1.36.3"
+  version: 1.36.4
+  resolution: "@upstash/redis@npm:1.36.4"
   dependencies:
     uncrypto: "npm:^0.1.3"
-  checksum: 10c0/7ba31e8c603827e239bbac6fb51a59199a9bd6312529765d0631a6a8561c4a2a70bb46fe0376fe5894c0954aa176b0669d9d47c9d6e2334549d1fda736d2b85f
+  checksum: 10c0/ca471c29e60f3e9d1a52ef500999c50a65db52ea8c1d09a7d055cde0316be2764a792f835f44630b7c175a64a11d2758f7ca515b79317fff17fd1d32e5fcf4d4
   languageName: node
   linkType: hard
 
